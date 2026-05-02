@@ -6,7 +6,6 @@ import { corsOptions } from './config/cors.config.js'
 import { sessionOptions } from './config/session.config.js'
 
 import pageRoutes from './routes/page.routes.js'
-import healthRoutes from './routes/health.routes.js'
 import oidcRoutes from './routes/oidc.routes.js'
 import authRoutes from './routes/auth.routes.js'
 import devRoutes from './routes/dev.routes.js'
@@ -21,7 +20,6 @@ app.use(express.urlencoded({ extended: false }))
 app.use(session(sessionOptions))
 
 app.use('/', pageRoutes)
-app.use('/', healthRoutes)
 app.use('/', oidcRoutes)
 app.use('/o/auth', authRoutes)
 app.use('/dev', devRoutes)

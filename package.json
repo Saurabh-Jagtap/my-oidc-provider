@@ -5,7 +5,8 @@
 		"client": "node src/app.js",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"keys:generate": "node scripts/generate-keys.js"
 	},
 	"dependencies": {
 		"bcrypt": "^6.0.0",

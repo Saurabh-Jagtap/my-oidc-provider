@@ -1,4 +1,4 @@
-import { integer, pgTable, timestamp, varchar, uuid, boolean, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, varchar, uuid, boolean, text, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -34,8 +34,9 @@ export const clientsTable = pgTable("clients", {
 export const refreshTokensTable = pgTable("refresh_tokens", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
-  clientId: varchar("client_id").notNull(),
+  clientId: varchar("client_id", {length: 100}).notNull().references(()=>clientsTable.clientId, {onDelete: "cascade"}),
   refreshTokenHash: text("refresh_token_hash").notNull(),
+  scope: text("scope").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   revoked: boolean("revoked").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -58,8 +59,8 @@ export const authorizationCodesTable = pgTable("authorization_codes", {
 export const userConsentsTable = pgTable("user_consent", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: uuid("user_id").notNull().references(() => usersTable.id, {onDelete: "cascade"}),
-  clientId: varchar("client_id").notNull(),
-  scopes: text("scopes"),
+  clientId: varchar("client_id", {length: 100}).notNull().references(() => clientsTable.clientId),
+  scopes: text("scopes").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },

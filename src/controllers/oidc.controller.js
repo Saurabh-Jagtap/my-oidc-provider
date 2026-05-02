@@ -48,22 +48,23 @@ const createIdToken = async ({ user, clientId, nonce }) => {
         given_name: user.firstName ?? "",
         family_name: user.lastName ?? "",
         name: [user.firstName, user.lastName].filter(Boolean).join(" "),
+        nonce: nonce,
     })
         .setProtectedHeader({ alg: "RS256", kid: oidcConfig.keyId })
         .setIssuer(oidcConfig.issuer)
         .setAudience(clientId)
-        .setClaim("nonce", nonce)
         .setIssuedAt()
         .setExpirationTime(oidcConfig.accessTokenExpiresIn)
         .sign(privateKey);
 };
 
-const createRefreshToken = async ({ userId, clientId }) => {
+const createRefreshToken = async ({ userId, clientId, scope }) => {
     const refreshToken = crypto.randomBytes(64).toString("hex")
 
     await db.insert(refreshTokensTable).values({
         userId,
         clientId,
+        scope,
         refreshTokenHash: hashToken(refreshToken),
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     })
@@ -71,7 +72,7 @@ const createRefreshToken = async ({ userId, clientId }) => {
     return refreshToken
 }
 
-const normalizeScopes = (scopeStr) => {
+const normalizeScopes = (scopeStr = "") => {
     return scopeStr
         .split(" ")
         .map(s => s.trim().toLowerCase())
@@ -126,7 +127,29 @@ export const getJwks = (req, res) => {
 export const authorize = async (req, res) => {
     const { redirect_uri, state, client_id, code_challenge, scope, nonce } = req.query;
 
-    await cleanupAuthorizationCodes();
+    const allowedScopes = ["openid", "profile", "email"];
+    const requestedScopes = normalizeScopes(scope);
+
+    try {
+        await cleanupAuthorizationCodes();
+    } catch (err) {
+        console.error("Cleanup failed:", {
+            message: err.message,
+            cause: err.cause,
+            code: err.cause?.code,
+            detail: err.cause?.detail,
+            table: err.cause?.table,
+            column: err.cause?.column,
+        });
+
+        return res.status(500).json({
+            error: "cleanup_failed",
+            message: err.message,
+            cause: err.cause?.message,
+            code: err.cause?.code,
+        });
+    }
+
 
     if (!client_id) {
         return res.status(400).json({ error: "missing_client_id" });
@@ -146,14 +169,23 @@ export const authorize = async (req, res) => {
         return res.status(400).json({ error: "missing_nonce" });
     }
 
-    const redirectUris = JSON.parse(client.redirectUris);
+    let redirectUris;
+    try {
+        redirectUris = JSON.parse(client.redirectUris);
+    } catch {
+        return res.status(500).json({ error: "invalid_client_redirect_uris" });
+    }
 
     if (!redirectUris.includes(redirect_uri)) {
         return res.status(400).json({ error: "Invalid redirect uri" })
     }
 
-    if (!scope || !scope.split(" ").includes("openid")) {
+    if (!requestedScopes.includes("openid")) {
         return res.status(400).json({ error: "invalid_scope" });
+    }
+
+    if (!requestedScopes.every(s => allowedScopes.includes(s))) {
+        return res.status(400).json({ error: "unsupported_scope" });
     }
 
     if (!code_challenge) {
@@ -202,8 +234,6 @@ export const authorize = async (req, res) => {
             )
         )
         .limit(1);
-
-    const requestedScopes = normalizeScopes(scope);
 
     let hasConsent = false;
 
@@ -367,6 +397,7 @@ export const token = async (req, res) => {
         const newRefreshToken = await createRefreshToken({
             userId: user.id,
             clientId: stored.clientId,
+            scope: stored.scope,
         })
 
         return res.json({
@@ -456,11 +487,13 @@ export const token = async (req, res) => {
         const accessToken = await createAccessToken({
             user,
             clientId: storedRefresh.clientId,
+            scope: storedRefresh.scope,
         })
 
         const newRefreshToken = await createRefreshToken({
             userId: user.id,
             clientId: storedRefresh.clientId,
+            scope: storedRefresh.scope,
         })
 
         return res.json({
@@ -535,6 +568,7 @@ export const userinfo = async (req, res) => {
     }
 }
 
+// OIDC Consent flow function
 export const consent = async (req, res) => {
     const { state, action } = req.body;
 
@@ -551,6 +585,10 @@ export const consent = async (req, res) => {
         delete req.session.authRequests[state];
 
         return res.redirect(redirectUrl.toString());
+    }
+
+    if (action !== "approve") {
+        return res.status(400).json({ error: "invalid_consent_action" });
     }
 
     if (!req.session.user) {
@@ -610,3 +648,25 @@ export const consent = async (req, res) => {
     return res.redirect(redirectUrl.toString());
 }
 
+// Backend Consent flow function
+export const getConsentData = async (req, res) => {
+    const { state } = req.query;
+
+    const request = req.session.authRequests?.[state];
+
+    if (!request) {
+        return res.status(400).json({ error: "invalid_state" });
+    }
+
+    const [client] = await db
+        .select()
+        .from(clientsTable)
+        .where(eq(clientsTable.clientId, request.client_id))
+        .limit(1);
+
+    return res.json({
+        clientName: client?.name || "Unknown App",
+        scopes: normalizeScopes(request.scope),
+    });
+
+}

@@ -8,3 +8,7 @@ export const getLoginPage = (req, res) => {
 export const getRegisterPage = (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'))
 }
+
+export const getConsentPage = (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'consent.html'))
+}

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authorize Application</title>
+  <style>
+    :root {
+      --panel: rgba(255, 255, 255, 0.88);
+      --ink: #172033;
+      --muted: #667085;
+      --brand-ink: #fff;
+      --brand-muted: rgba(255, 255, 255, 0.74);
+      --grid-line: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255, 255, 255, 0.08);
+      --glass-line: rgba(255, 255, 255, 0.2);
+      --accent: #00a676;
+      --accent-dark: #027a5c;
+      --rose: #ff6b6b;
+      --gold: #f9c74f;
+      --line: rgba(15, 23, 42, 0.12);
+      --danger: #d92d20;
+      --font-body: Aptos, "Segoe UI Variable Text", "Segoe UI", Roboto, Arial, sans-serif;
+      --font-display: Aptos, "Segoe UI Variable Display", "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body[data-theme="light"] {
+      --panel: rgba(255, 255, 255, 0.94);
+      --ink: #101828;
+      --muted: #475467;
+      --brand-ink: #101828;
+      --brand-muted: rgba(16, 24, 40, 0.72);
+      --grid-line: rgba(15, 23, 42, 0.08);
+      --glass: rgba(255, 255, 255, 0.62);
+      --glass-line: rgba(15, 23, 42, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(0, 166, 118, 0.34), transparent 28%),
+        radial-gradient(circle at 84% 24%, rgba(255, 107, 107, 0.26), transparent 24%),
+        radial-gradient(circle at 52% 92%, rgba(249, 199, 79, 0.23), transparent 24%),
+        linear-gradient(135deg, #101828 0%, #172554 52%, #083344 100%);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 18px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body[data-theme="light"] {
+      background:
+        radial-gradient(circle at 18% 20%, rgba(0, 166, 118, 0.22), transparent 28%),
+        radial-gradient(circle at 84% 24%, rgba(255, 107, 107, 0.18), transparent 24%),
+        radial-gradient(circle at 52% 92%, rgba(249, 199, 79, 0.24), transparent 24%),
+        linear-gradient(135deg, #f8fafc 0%, #e0f2fe 52%, #d1fae5 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -50%;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle, black, transparent 68%);
+      animation: drift 16s linear infinite;
+      pointer-events: none;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--glass-line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--brand-ink);
+      background: var(--glass);
+      font: inherit;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(18px);
+    }
+
+    .theme-toggle:hover {
+      border-color: rgba(0, 166, 118, 0.55);
+    }
+
+    .theme-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--brand-ink);
+      box-shadow: inset -5px -3px 0 var(--glass);
+    }
+
+    .consent-shell {
+      width: min(1060px, 100%);
+      display: grid;
+      grid-template-columns: 1fr 0.95fr;
+      align-items: center;
+      gap: clamp(28px, 5vw, 70px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-copy {
+      max-width: 620px;
+      color: var(--brand-ink);
+      animation: rise-in 700ms ease both;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      border: 1px solid var(--glass-line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--brand-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      backdrop-filter: blur(18px);
+      background: var(--glass);
+    }
+
+    h1 {
+      max-width: 680px;
+      margin: 20px 0 16px;
+      font-family: var(--font-display);
+      font-size: clamp(2.15rem, 5.2vw, 4.2rem);
+      font-weight: 760;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h1 span {
+      color: var(--accent);
+      display: block;
+    }
+
+    .brand-copy p {
+      max-width: 540px;
+      color: var(--brand-muted);
+      font-size: clamp(1rem, 1.45vw, 1.1rem);
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .trust-panel {
+      width: min(520px, 100%);
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+      padding: 16px;
+      border: 1px solid var(--glass-line);
+      border-radius: 8px;
+      background: var(--glass);
+      backdrop-filter: blur(18px);
+    }
+
+    .trust-step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      align-items: center;
+      gap: 12px;
+      color: var(--brand-muted);
+      animation: rise-in 650ms ease both;
+    }
+
+    .trust-step:nth-child(2) {
+      animation-delay: 80ms;
+    }
+
+    .trust-step:nth-child(3) {
+      animation-delay: 160ms;
+    }
+
+    .step-icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(0, 166, 118, 0.18);
+      color: var(--brand-ink);
+      font-weight: 800;
+    }
+
+    .trust-step strong,
+    .trust-step span {
+      display: block;
+    }
+
+    .trust-step strong {
+      color: var(--brand-ink);
+      font-size: 0.94rem;
+      font-weight: 700;
+    }
+
+    .trust-step span {
+      margin-top: 2px;
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .consent-card {
+      width: min(470px, 100%);
+      justify-self: end;
+      position: relative;
+      overflow: hidden;
+      padding: clamp(18px, 3vw, 28px);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 30px 80px rgba(2, 8, 23, 0.42);
+      backdrop-filter: blur(24px);
+      animation: card-in 850ms 120ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    .consent-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--gold), var(--rose));
+    }
+
+    .mark {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #0f172a;
+      color: #fff;
+      margin-bottom: 14px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+      position: relative;
+      isolation: isolate;
+    }
+
+    .mark::before {
+      content: "";
+      width: 26px;
+      height: 26px;
+      border: 3px solid var(--accent);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 4s linear infinite;
+    }
+
+    .mark::after {
+      content: "";
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--rose);
+      transform: translate(15px, -15px);
+      box-shadow: 0 0 0 6px rgba(255, 107, 107, 0.18);
+    }
+
+    .consent-card h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      font-weight: 760;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    .consent-card>p {
+      margin: 10px 0 16px;
+      color: var(--muted);
+      font-size: 0.96rem;
+      line-height: 1.55;
+    }
+
+    .app-request {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .app-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, #172554, #00a676);
+      font-weight: 800;
+    }
+
+    .app-request strong,
+    .app-request span {
+      display: block;
+    }
+
+    .app-request span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-top: 2px;
+    }
+
+    .scope-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 8px;
+      color: #344054;
+      font-size: 0.86rem;
+      font-weight: 750;
+    }
+
+    .scope-count {
+      color: var(--accent-dark);
+      font-weight: 800;
+    }
+
+    .scopes-list {
+      list-style: none;
+      display: grid;
+      gap: 10px;
+      margin: 0 0 16px;
+      padding: 0;
+    }
+
+    .scope-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: center;
+      min-height: 54px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.56);
+      animation: rise-in 580ms ease both;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .scope-item:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 166, 118, 0.34);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .scope-check {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: rgba(0, 166, 118, 0.13);
+      color: var(--accent-dark);
+      font-weight: 900;
+      position: relative;
+    }
+
+    .scope-check::after {
+      content: "";
+      width: 6px;
+      height: 12px;
+      border: solid currentColor;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+
+    .scope-item strong,
+    .scope-item span {
+      display: block;
+    }
+
+    .scope-item strong {
+      font-size: 0.94rem;
+      color: var(--ink);
+    }
+
+    .scope-item span {
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-button {
+      min-height: 48px;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease, border-color 180ms ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-button::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.42) 45%, transparent 70%);
+      transform: translateX(-120%);
+      transition: transform 650ms ease;
+    }
+
+    .action-button:hover {
+      transform: translateY(-2px);
+    }
+
+    .action-button:hover::after {
+      transform: translateX(120%);
+    }
+
+    .approve-button {
+      border: 0;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      box-shadow: 0 16px 32px rgba(0, 166, 118, 0.32);
+    }
+
+    .approve-button:hover {
+      box-shadow: 0 20px 38px rgba(0, 166, 118, 0.42);
+      filter: saturate(1.12);
+    }
+
+    .deny-button {
+      border: 1px solid rgba(217, 45, 32, 0.28);
+      color: var(--danger);
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .deny-button:hover {
+      border-color: rgba(217, 45, 32, 0.48);
+      box-shadow: 0 14px 28px rgba(217, 45, 32, 0.1);
+    }
+
+    .fine-print {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+
+      to {
+        transform: translate3d(56px, 56px, 0);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes card-in {
+      from {
+        opacity: 0;
+        transform: translateY(34px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 860px) {
+      body {
+        overflow: auto;
+        place-items: start center;
+        padding: 22px;
+      }
+
+      .consent-shell {
+        grid-template-columns: 1fr;
+        padding-block: 18px;
+      }
+
+      .consent-card {
+        justify-self: stretch;
+        width: 100%;
+      }
+
+      .brand-copy p {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 861px) and (max-height: 720px) {
+      .consent-shell {
+        gap: 32px;
+      }
+
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        margin: 16px 0 12px;
+      }
+
+      .brand-copy p,
+      .trust-panel {
+        display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="theme-toggle" id="themeToggle" type="button" aria-label="Switch to light mode">
+    <span class="theme-icon" aria-hidden="true"></span>
+    <span id="themeLabel">Light</span>
+  </button>
+
+  <main class="consent-shell" aria-label="OIDC consent">
+    <section class="brand-copy">
+      <div class="eyebrow">OpenID Connect Consent</div>
+      <h1>Review access before <span>issuing tokens.</span></h1>
+      <p>
+        Confirm the requested claims before this client can continue. Approving stores consent for matching scopes in
+        future authorization requests.
+      </p>
+
+      <div class="trust-panel" aria-label="Consent flow details">
+        <div class="trust-step">
+          <div class="step-icon">1</div>
+          <div>
+            <strong>Scope review</strong>
+            <span>See the identity claims the client is asking to read.</span>
+          </div>
+        </div>
+        <div class="trust-step">
+          <div class="step-icon">2</div>
+          <div>
+            <strong>Explicit decision</strong>
+            <span>Approve the request or return an access denied response.</span>
+          </div>
+        </div>
+        <div class="trust-step">
+          <div class="step-icon">3</div>
+          <div>
+            <strong>Secure continuation</strong>
+            <span>The original state value keeps the OIDC redirect flow tied together.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="consent-card" aria-labelledby="consent-title">
+      <div class="mark" aria-hidden="true"></div>
+      <h2 id="consent-title">Authorize application</h2>
+      <p>This client wants permission to access selected profile information.</p>
+
+      <div class="app-request" aria-label="Requesting application">
+        <div class="app-icon" aria-hidden="true">ID</div>
+        <div>
+          <strong>OIDC Client</strong>
+          <span>localhost authorization request</span>
+        </div>
+      </div>
+
+      <div class="scope-label">
+        <span>Requested access</span>
+        <span class="scope-count" id="scopeCount">0 scopes</span>
+      </div>
+      <ul class="scopes-list" id="scopes-list"></ul>
+
+      <form method="POST" action="/consent">
+        <input type="hidden" name="state" id="state-input">
+
+        <div class="actions">
+          <button class="action-button deny-button" type="submit" name="action" value="deny">
+            Deny
+          </button>
+
+          <button class="action-button approve-button" type="submit" name="action" value="approve">
+            Allow
+          </button>
+        </div>
+      </form>
+
+      <p class="fine-print">Only approve clients you recognize. You can deny and restart the login flow any time.</p>
+    </section>
+  </main>
+
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    const savedTheme = localStorage.getItem('authTheme') || 'dark';
+
+    function setTheme(theme) {
+      document.body.dataset.theme = theme;
+      const nextTheme = theme === 'dark' ? 'light' : 'dark';
+      themeLabel.textContent = nextTheme === 'light' ? 'Light' : 'Dark';
+      themeToggle.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+      localStorage.setItem('authTheme', theme);
+    }
+
+    setTheme(savedTheme);
+    themeToggle.addEventListener('click', () => {
+      setTheme(document.body.dataset.theme === 'dark' ? 'light' : 'dark');
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get('state') || '';
+    const stateInput = document.getElementById('state-input');
+    const list = document.getElementById('scopes-list');
+    const scopeCount = document.getElementById('scopeCount');
+
+    stateInput.value = state;
+
+    const scopeDetails = {
+      openid: 'Access your basic identity',
+      profile: 'View your name and profile info',
+      email: 'View your email address'
+    };
+
+    function renderScopes(scopes) {
+      list.innerHTML = '';
+      scopeCount.textContent = `${scopes.length} ${scopes.length === 1 ? 'scope' : 'scopes'}`;
+
+      scopes.forEach((scope, index) => {
+        const li = document.createElement('li');
+        li.className = 'scope-item';
+        li.style.animationDelay = `${index * 80}ms`;
+
+        const icon = document.createElement('span');
+        icon.className = 'scope-check';
+        icon.setAttribute('aria-hidden', 'true');
+
+        const content = document.createElement('span');
+        const title = document.createElement('strong');
+        const description = document.createElement('span');
+
+        title.textContent = scope;
+        description.textContent = scopeDetails[scope] || 'Grant this requested authorization scope.';
+
+        content.append(title, description);
+        li.append(icon, content);
+        list.appendChild(li);
+      });
+    }
+
+    (async () => {
+      try {
+        if (!state) {
+          throw new Error('Missing consent state.');
+        }
+
+        const res = await fetch(`/consent-data?state=${encodeURIComponent(state)}`);
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Could not load consent request.');
+        }
+
+        const scopes = Array.isArray(data.scopes) ? data.scopes : [];
+        const clientName = data.clientName || 'Unknown App';
+
+        document.querySelector('.app-request strong').textContent = clientName;
+        renderScopes(scopes);
+      } catch (error) {
+        document.querySelector('.app-request strong').textContent = 'Consent unavailable';
+        document.querySelector('.consent-card > p').textContent = error.message;
+        renderScopes([]);
+        document.querySelectorAll('.action-button').forEach((button) => {
+          button.disabled = true;
+        });
+
+      }
+    })();
+  </script>
+</body>
+
+</html>

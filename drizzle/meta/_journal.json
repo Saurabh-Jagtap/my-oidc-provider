@@ -15,6 +15,20 @@
       "when": 1777372316806,
       "tag": "0001_nice_starfox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777635596402,
+      "tag": "0002_chief_synch",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777636595508,
+      "tag": "0003_free_dark_beast",
+      "breakpoints": true
     }
   ]
 }
