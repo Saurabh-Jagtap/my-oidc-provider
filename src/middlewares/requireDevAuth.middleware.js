@@ -1,6 +1,10 @@
 export const requireDevAuth = (req, res, next) => {
-  if (!req.session.developer) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!req.session.user) {
+    return res.redirect("/login.html");
+  }
+
+  if (req.session.user.role !== "developer") {
+    return res.redirect("/become-dev.html");
   }
 
   next();

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Console | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0b0f1a; }
+        .code-block { background-color: #111827; border: 1px solid #1f2937; }
+    </style>
+</head>
+<body class="text-slate-200">
+    <nav class="border-b border-slate-800 px-8 py-4 flex justify-between items-center bg-slate-900/50 backdrop-blur-md">
+        <h1 class="text-xl font-bold text-indigo-400">DevConsole <span class="text-slate-500 font-light">/ Dashboard</span></h1>
+        <div class="flex items-center gap-4">
+            <span class="text-sm text-slate-400">Status: <span class="text-green-500">Online</span></span>
+            <button onclick="location.href='/login.html'" class="text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-md transition-all">Logout</button>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-xl">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        New Client
+                    </h2>
+                    <form id="clientForm" class="space-y-4">
+                        <input name="name" placeholder="App Name" required 
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        <input name="redirectUri" placeholder="Redirect URI" required 
+                            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        <button class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg transition-all">
+                            Register App
+                        </button>
+                    </form>
+                    <div class="mt-8">
+  <h2 class="text-lg font-semibold mb-4">Your Clients</h2>
+  <ul id="clientsList" class="space-y-3"></ul>
+</div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="code-block rounded-xl overflow-hidden shadow-2xl flex flex-col h-full min-h-[400px]">
+                    <div class="bg-slate-800/50 px-4 py-2 text-xs font-mono text-slate-400 flex justify-between">
+                        <span>RESPONSE_DATA.JSON</span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500/50"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500/50"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500/50"></div>
+                        </div>
+                    </div>
+                    <pre id="output" class="p-6 text-sm font-mono text-emerald-400 overflow-auto flex-grow">// Results will appear here after creation...</pre>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+const output = document.getElementById("output");
+const list = document.getElementById("clientsList");
+
+// Load all clients
+async function loadClients() {
+  try {
+    const res = await fetch("/clients");
+    const data = await res.json();
+
+    list.innerHTML = "";
+
+    if (!data.clients || data.clients.length === 0) {
+      list.innerHTML = "<li class='text-slate-400'>No clients yet</li>";
+      return;
+    }
+
+    data.clients.forEach(client => {
+      const li = document.createElement("li");
+
+      li.className = "bg-slate-800 p-4 rounded-lg";
+
+      li.innerHTML = `
+        <div class="text-sm font-semibold text-indigo-400">${client.name}</div>
+        <div class="text-xs text-slate-400 mt-1">client_id: ${client.clientId}</div>
+        <button 
+          class="mt-2 text-xs text-red-400 hover:underline"
+          onclick="deleteClient('${client.clientId}')"
+        >
+          Delete
+        </button>
+      `;
+
+      list.appendChild(li);
+    });
+
+  } catch (err) {
+    list.innerHTML = "<li class='text-red-400'>Failed to load clients</li>";
+  }
+}
+
+// 🔹 Delete client
+async function deleteClient(clientId) {
+  const res = await fetch(`/clients/${clientId}`, {
+    method: "DELETE"
+  });
+
+  if (res.ok) {
+    loadClients();
+  } else {
+    alert("Delete failed");
+  }
+}
+
+// Create client
+document.getElementById("clientForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const form = e.target;
+
+  output.innerText = "Creating client...";
+  output.classList.add("animate-pulse");
+
+  try {
+    const res = await fetch("/clients/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: form.name.value,
+        redirect_uris: [form.redirectUri.value]
+      })
+    });
+
+    const data = await res.json();
+    output.classList.remove("animate-pulse");
+
+    if (res.ok) {
+      output.innerText = JSON.stringify(data, null, 2);
+
+      // IMPORTANT: show secret only once
+      alert(
+        "IMPORTANT:\n\nSave your client_secret now.\nYou won't see it again."
+      );
+
+      form.reset();
+      loadClients();
+    } else {
+      output.innerText = "Error: " + data.error;
+    }
+
+  } catch (err) {
+    output.innerText = "Fatal: Server error";
+  }
+});
+
+// 🔹 Load on page start
+loadClients();
+</script>
+</body>
+</html>

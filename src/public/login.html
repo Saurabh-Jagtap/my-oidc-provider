@@ -633,11 +633,18 @@
         <div class="form-message" id="formMessage" aria-live="polite"></div>
       </form>
 
-      <div class="fine-print">New here? <a href="register.html">Create an account</a></div>
+      <div class="fine-print">New here? <a href="register.html" id="registerLink">Create an account</a></div>
     </section>
   </main>
 
   <script>
+    // Preserve state in register link
+    const params = new URLSearchParams(window.location.search);
+    const state = params.get('state');
+    if (state) {
+        document.getElementById('registerLink').href = `register.html?state=${encodeURIComponent(state)}`;
+    }
+
     const themeToggle = document.getElementById('themeToggle');
     const themeLabel = document.getElementById('themeLabel');
     const savedTheme = localStorage.getItem('authTheme') || 'dark';
@@ -729,21 +736,16 @@
       try {
         const params = new URLSearchParams(window.location.search);
         const state = params.get('state');
+        const fetchUrl = state ? `/login?state=${encodeURIComponent(state)}` : '/login';
 
-        const response = await fetch('http://localhost:3000/o/auth/login', {
+        const response = await fetch(fetchUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             email: fields.email.value.trim().toLowerCase(),
             password: fields.password.value,
-            state
           })
         });
-
-        if (response.redirected) {
-          window.location.href = response.url;
-          return;
-        }
 
         const data = await response.json().catch(() => ({}));
 

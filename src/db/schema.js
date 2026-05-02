@@ -8,26 +8,18 @@ export const usersTable = pgTable("users", {
   emailVerified: boolean("email_verified").default(false).notNull(),
   password: varchar("password", { length: 66 }).notNull(),
   salt: text("salt"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const developersTable = pgTable("developers", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  firstName: varchar("first_name", { length: 25 }).notNull(),
-  lastName: varchar("last_name", { length: 25 }),
-  email: varchar("email", { length: 322 }).notNull().unique(),
-  password: varchar("password", { length: 66 }).notNull(),
-  salt: text("salt"),
+  role: varchar("role", { length: 20 }).default("user").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const clientsTable = pgTable("clients", {
   id: uuid("id").primaryKey().defaultRandom(),
-  developerId: uuid("developer_id").notNull().references(() => developersTable.id),
+  userId: uuid("user_id").notNull().references(() => usersTable.id),
   name: varchar("name", { length: 100 }).notNull(),
   clientId: varchar("client_id", { length: 100 }).notNull().unique(),
-  clientSecret: text("client_secret"),
+  clientSecret: text("client_secret").notNull(),
   redirectUris: text("redirect_uris").notNull(),
+  revoked: boolean("revoked").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

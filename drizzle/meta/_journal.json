@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1777372236610,
-      "tag": "0000_worried_captain_britain",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1777372316806,
-      "tag": "0001_nice_starfox",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1777635596402,
-      "tag": "0002_chief_synch",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1777636595508,
-      "tag": "0003_free_dark_beast",
+      "when": 1777724422739,
+      "tag": "0000_mushy_lethal_legion",
       "breakpoints": true
     }
   ]

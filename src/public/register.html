@@ -835,7 +835,11 @@
       };
 
       try {
-        const response = await fetch('http://localhost:3000/o/auth/register', {
+        const urlParams = new URLSearchParams(window.location.search);
+        const state = urlParams.get('state');
+        const fetchUrl = state ? `/register?state=${encodeURIComponent(state)}` : '/register';
+
+        const response = await fetch(fetchUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -854,6 +858,11 @@
         updatePasswordMeter();
         formMessage.textContent = data.message || 'User registered successfully!';
         formMessage.className = 'form-message success';
+
+        if (data.redirectTo) {
+          window.location.href = data.redirectTo;
+          return;
+        }
       } catch (error) {
         formMessage.textContent = error.message || 'Could not create account right now.';
         formMessage.className = 'form-message error-message';

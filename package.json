@@ -2,7 +2,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "node src/server.js",
-		"client": "node src/app.js",
+		"client": "node src/clientApp.js",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",

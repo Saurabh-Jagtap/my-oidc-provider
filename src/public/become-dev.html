@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Become a Developer | OIDC</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(255, 255, 255, 0.86);
+      --ink: #172033;
+      --muted: #667085;
+      --brand-ink: #fff;
+      --brand-muted: rgba(255, 255, 255, 0.74);
+      --grid-line: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255, 255, 255, 0.08);
+      --glass-line: rgba(255, 255, 255, 0.2);
+      --accent: #00a676;
+      --accent-dark: #027a5c;
+      --rose: #ff6b6b;
+      --gold: #f9c74f;
+      --line: rgba(15, 23, 42, 0.12);
+      --danger: #d92d20;
+      --success: #027a48;
+      --font-body: Aptos, "Segoe UI Variable Text", "Segoe UI", Roboto, Arial, sans-serif;
+      --font-display: Aptos, "Segoe UI Variable Display", "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body[data-theme="light"] {
+      --panel: rgba(255, 255, 255, 0.94);
+      --ink: #101828;
+      --muted: #475467;
+      --brand-ink: #101828;
+      --brand-muted: rgba(16, 24, 40, 0.72);
+      --grid-line: rgba(15, 23, 42, 0.08);
+      --glass: rgba(255, 255, 255, 0.62);
+      --glass-line: rgba(15, 23, 42, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(0, 166, 118, 0.35), transparent 28%),
+        radial-gradient(circle at 82% 22%, rgba(255, 107, 107, 0.28), transparent 24%),
+        radial-gradient(circle at 52% 90%, rgba(249, 199, 79, 0.24), transparent 24%),
+        linear-gradient(135deg, #101828 0%, #172554 52%, #083344 100%);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 18px;
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body[data-theme="light"] {
+      background:
+        radial-gradient(circle at 20% 18%, rgba(0, 166, 118, 0.22), transparent 28%),
+        radial-gradient(circle at 82% 22%, rgba(255, 107, 107, 0.18), transparent 24%),
+        radial-gradient(circle at 52% 90%, rgba(249, 199, 79, 0.24), transparent 24%),
+        linear-gradient(135deg, #f8fafc 0%, #e0f2fe 52%, #d1fae5 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -50%;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(circle, black, transparent 68%);
+      animation: drift 16s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes drift {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(4deg); }
+    }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 166, 118, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 166, 118, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 166, 118, 0); }
+    }
+
+    .shell {
+      width: min(1040px, 100%);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      align-items: center;
+      gap: clamp(24px, 4vw, 58px);
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; text-align: center; }
+      .brand-copy { margin-bottom: 32px; }
+      .brand-copy h1 { margin-inline: auto; }
+      .brand-copy p { margin-inline: auto; }
+      .status-row { justify-content: center; }
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      border: 1px solid var(--glass-line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--brand-ink);
+      background: var(--glass);
+      font: inherit;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(18px);
+    }
+
+    .brand-copy {
+      color: var(--brand-ink);
+      animation: rise-in 700ms ease both;
+    }
+
+    .eyebrow {
+      width: fit-content;
+      border: 1px solid var(--glass-line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: var(--brand-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      backdrop-filter: blur(18px);
+      background: var(--glass);
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.15rem, 5.2vw, 4.2rem);
+      font-weight: 760;
+      line-height: 1.03;
+      margin: 0 0 16px;
+    }
+
+    h1 span {
+      color: var(--accent);
+      display: block;
+    }
+
+    .brand-copy p {
+      max-width: 480px;
+      color: var(--brand-muted);
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .feature-list {
+      margin-top: 24px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--brand-muted);
+      font-size: 0.95rem;
+    }
+
+    .feature-item svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent);
+    }
+
+    .onboarding-card {
+      background: var(--panel);
+      backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: clamp(24px, 5vw, 48px);
+      box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px var(--glass-line);
+      animation: rise-in 700ms 150ms ease both;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin: 0 0 12px;
+    }
+
+    .card-desc {
+      color: var(--muted);
+      margin-bottom: 32px;
+      font-size: 1.05rem;
+    }
+
+    .cta-button {
+      width: 100%;
+      min-height: 56px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 8px 20px rgba(0, 166, 118, 0.2);
+    }
+
+    .cta-button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0, 166, 118, 0.3);
+    }
+
+    .cta-button:active {
+      transform: translateY(0);
+    }
+
+    .cta-button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="theme-toggle" id="themeToggle">
+    <span id="themeLabel">Dark Mode</span>
+  </button>
+
+  <div class="shell">
+    <div class="brand-copy">
+      <div class="eyebrow">Developer Program</div>
+      <h1>Build the <span>Future.</span></h1>
+      <p>Join our developer ecosystem to create, manage, and scale secure applications using industry-standard OIDC protocols.</p>
+      
+      <ul class="feature-list">
+        <li class="feature-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+          Manage Unlimited Applications
+        </li>
+        <li class="feature-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+          Secure API Client Secrets
+        </li>
+        <li class="feature-item">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+          Advanced OIDC Flow Support
+        </li>
+      </ul>
+    </div>
+
+    <div class="onboarding-card">
+      <h2>Get Started</h2>
+      <p class="card-desc">Activate your developer profile to access the dashboard and start building today.</p>
+
+      <button id="becomeDev" class="cta-button">
+        <span class="loading-spinner" id="spinner"></span>
+        <span id="btnText">Become Developer</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    const body = document.body;
+
+    // Theme Logic
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    body.setAttribute('data-theme', savedTheme);
+    themeLabel.textContent = savedTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = body.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      
+      body.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      themeLabel.textContent = newTheme === 'light' ? 'Dark Mode' : 'Light Mode';
+    });
+
+    // Become Dev Logic
+    const becomeDevBtn = document.getElementById("becomeDev");
+    const spinner = document.getElementById("spinner");
+    const btnText = document.getElementById("btnText");
+
+    becomeDevBtn.addEventListener("click", async () => {
+      becomeDevBtn.disabled = true;
+      spinner.style.display = "block";
+      btnText.textContent = "Processing...";
+
+      try {
+        const res = await fetch("/become-developer", {
+          method: "POST"
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          window.location.href = "/dev-dashboard.html";
+        } else {
+          alert(data.error || data.message || "Something went wrong");
+          becomeDevBtn.disabled = false;
+          spinner.style.display = "none";
+          btnText.textContent = "Become Developer";
+        }
+      } catch (err) {
+        alert("Network error. Please try again.");
+        becomeDevBtn.disabled = false;
+        spinner.style.display = "none";
+        btnText.textContent = "Become Developer";
+      }
+    });
+  </script>
+</body>
+
+</html>

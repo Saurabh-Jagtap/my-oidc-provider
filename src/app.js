@@ -21,7 +21,7 @@ app.use(session(sessionOptions))
 
 app.use('/', pageRoutes)
 app.use('/', oidcRoutes)
-app.use('/o/auth', authRoutes)
+app.use('/', authRoutes)
 app.use('/dev', devRoutes)
 app.use('/clients', clientRoutes)
 
